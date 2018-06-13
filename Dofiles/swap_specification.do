@@ -12,7 +12,7 @@ program define swapspec;
 
 	#delimit ;
 
-global specdata = "$work/`datafile'";
+global specdata = "$output_dta/`datafile'";
 global depvars "";
 global depinteract "";
 global outinteract "";

@@ -209,4 +209,4 @@ gen scellbasebench = base_scell*10000 + bench_s_cell
 
 
 *save "$work/mergedfile_wendline_062812", replace
-save "$work/merged_data_public2", replace
+save "$output_dta/merged_data_public2", replace

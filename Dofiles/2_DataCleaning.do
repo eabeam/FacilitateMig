@@ -2,9 +2,8 @@
 
 
 /* 			Clean Endline Survey */
-use "$work/merged_data_public2", clear
+use "$output_dta/merged_data_public2", clear
 
-*gen benchmarkassign = bench_s_cell != .
 
 ******************************************
 *		Assigned Treatments
@@ -45,6 +44,7 @@ replace bench_passreceived = 0 if bench_passreceived == .
 
 
 
+
 		foreach var in rel  sex ed work mnl ofw{
 		forval j = 1/9{
 		rename end_b_`var'_0`j' end_b_`var'_`j'
@@ -65,71 +65,7 @@ replace base_b11_ofw`i' = . if base_b11_ofw`i' == 88 | base_b11_ofw`i' == 99
 replace base_anyhh = 1 if base_b11_ofw`i' == 1
 }
 
-/*
-gen base_chancesorjob = base_d16_chance_s
-recode base_chancesorjob -2 = .
-recode base_chancesorjob -1 = .
-recode base_chancesorjob 88 = .
-recode base_chancesorjob 888 = .
 
-gen cflag_chancesorjob = base_chancesorjob == .
-recode base_chancesorjob . = 0
-// Sort out versions
-
-gen base_chanceselfjob = base_d15_chance
-recode base_chanceselfjob -2 = .
-recode base_chanceselfjob -1 = .
-recode base_chanceselfjob 88 = .
-recode base_chanceselfjob 888 = .
-*/
-
-// Individual covariates - Endline
-/*
-// Determine pid of respondent
-
-gen r_pid = end_b__pid 	if end_stype == "FULL"	// respondent id if stype is FULL, missing if log or proxy
-	replace r_pid = end_b_pidresp if end_stype == "PROXY"
-	
-	// Should go through and clean up the missing ones - 31 missing (see below) 
-	destring r_pid,replace
-
-tab r_pid if end_stype != "LOG"	,mi
-
-
-replace r_pid = . if r_pid == 88
-// Note that there are 16 surveys with no stype! where did they come from
-
-
-
-// Calculate the maximum roster id in the household
-		gen maxid 	 = 0
-		gen prob1 = 0
-		forval i = 1/11{
-		replace maxid = `i' if end_b_first_`i' != ""
-		}
-		tab maxid
-		replace maxid = . if end_stype == "LOG"
-		
-		
-// Fix a few messed up pids. 
-	gen adjust_id = 0			// Tracker for households with adjustments
-		
-		
-// If the respondent pid is greater than the maximum pid, and there's a member of the household with an identical name, then change the pid
-		
-	forval i = 1/6{
-		list hhid maxid end_first r_pid end_b_first_1-end_b_first_6 end_*pid* if end_first == end_b_first_`i' & r_pid > maxid		
-		list hhid_pjid maxid end_first r_pid end_b_first_1-end_b_first_6 end_e1a_pid_1 - end_e1a_pid_3 end_e3_pid_1-end_e3_pid_3 if end_first == end_b_first_`i' & r_pid > maxid & end_e3_pid_1 != .
-		replace adjust_id = 6 if end_first == end_b_first_`i' & r_pid > maxid
-		replace r_pid = `i' if end_first == end_b_first_`i' & r_pid > maxid
-
-			}
-
-
-
-gen _m_rpid = r_pid == .			// Missing indicator
-
-*/
 ********************************************
 *	Clean up ids in the migration tables 
 	// Clean up ids. 	
@@ -1201,13 +1137,6 @@ gen mid_avg`type'country = (_bench`type'_ca + _bench`type'_sa + _bench`type'_hk 
 
 
 
-/* Average cost, six countries */ 
-
-
-
-
-
-
 #delimit cr
 
 
@@ -1301,7 +1230,7 @@ list a_status_1 hhid_pjid if fup2013 == 1 & (a_status_1  < 1 | a_status_1 > 3 )
 	resp_anymig_rev = equals resp_anymig_orig, then addsany offer that led to migration in the follow-up that wasn't listed in the endline 
 	resp_anymig_origbroad = 1 if resp_anymig_orig == 1 or resp_ofwmigrate == 1  (the offer led to migration was confirmed, or was confirmed in the endline)
 	
-	we want to use resp_anymig_orig
+	Use resp_anymig_orig
 	*/ 
 // Generate new outcome variables  - HOUSEHOLD LEVEL
 foreach var in anymig_orig newmig anymig_pending{	
@@ -1325,8 +1254,6 @@ tab hh_ofwmigrate hh_anymig_orig
 gen hh_anymig_2013fup = (hh_anymig_orig == 1 | hh_newmig == 1) & (end_stype  == "FULL" | end_stype == "PROXY")
 gen hh_anymig_origbroad = (hh_anymig_orig == 1 | hh_ofwmigrate == 1) & (end_stype  == "FULL" | end_stype == "PROXY")
 
-*replace hh_anymig_2013fup = . if end_stype == "LOG" | (rosterfup2013 == 1 & fup2013 == 0)
-*replace hh_anymig_origbroad = . if end_stype == "LOG" | (rosterfup2013 == 1 & fup2013 == 0)
 
 replace hh_anymig_2013fup = . if end_stype == "LOG" 
 replace hh_anymig_origbroad = . if end_stype == "LOG" 
@@ -1335,6 +1262,7 @@ replace hh_anymig_origbroad = . if end_stype == "LOG"
 tab hh_ofwmigrate hh_anymig_2013fup		// 28 new, 8 missing 
 
 gen hh_anymig_revise = hh_anymig_orig
+
 // Revise HH outcome if there was an offer, but the status was different than anticipate 
 gen varX = 0
 forval i = 1/3{
@@ -1346,7 +1274,6 @@ replace hh_anymig_revise = 1 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_
 }
 }
 
-*outsheet a_status* a_position* a_country* a_offerdate* pid*F13 d2*F13 d3*F13 d4*F13 d8_migrate* d1_pid*F13 dt2*F13 hhid_pjid using "/Users/emilybeam/Desktop/hithere.xls" if varX == 1,replace 
 
 
 
@@ -1358,9 +1285,6 @@ replace e4mig = 1 if end_e4a_pid_`i' != .
 tab e4mig hh_ofwmig
 tab e4mig hh_ofwmig if rosterfup2013 == 0
 
-
-// CHECK
-list d1_pid_1_F13 dt2_pid_1_F13  if d1_pid_1_F != dt2_pid_1_F	// THIS IS WEIRD< BUT NO ONE MIGRATES SO IT DOESN"T MATTER
 
 // Generate new outcome variables  - RESPONDENT
 
@@ -1398,6 +1322,7 @@ replace resp_anymig_2013fup = . if end_stype == "LOG"  | _m_rpid == 1
 
 
 gen resp_anymig_revise = resp_anymig_orig
+
 // Revise HH outcome if there was an offer, but the status was different than anticipate 
 drop varX
 gen varX = 0
@@ -1412,7 +1337,7 @@ replace resp_anymig_revise = 1 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j
 
 
 
-save "$work/endline1_w2013fup",replace
+save "$output_dta/endline1_w2013fup",replace
 
 
 

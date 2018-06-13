@@ -13,7 +13,7 @@ swapspec  attritfull baselineno4145 ascending15 nopval
 
 ****************************/
 
-use "$work/attritfull.dta",clear
+use "$output_dta/attritfull.dta",clear
 
 
 
