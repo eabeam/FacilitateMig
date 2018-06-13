@@ -73,11 +73,11 @@ gen cihigh90 =  invttail(n-1,0.050)*(sd_ / sqrt(n))
 
 keep if treat2 == 0 | treat2 == 1 | treat2 == 2 | treat2 == 5
 gsort -var treat2
-browse
+
 
 outsheet using "$output_tables/Figure2_Impacts.xls",replace
 
 
 
 
-exit
+

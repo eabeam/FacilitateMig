@@ -39,7 +39,7 @@ gen mflag_`nvar' = `nvar' == .;
 tabstat mflag*;
 tab base_interv_base	;								/* Baseline counts*/ 
 tab benchpassassist benchpassinfo if benchmarka == 1; /* Passport counts */ 
-save tempdata,replace;
+save `tempdata',replace;
 
 
 
@@ -64,8 +64,8 @@ local P8 "passassist";
 
 forval i = 1/8{;
 foreach var in female $cov0{;
-
-use tempdata,clear;
+tempfile temp`var';
+use `tempdata',clear;
 `O`i'';
 keep if mflag_`var' == 0;		// NEW!;
 
@@ -73,23 +73,18 @@ collapse (mean) mean`P`i'' = `var'  $pweight ;
 gen str15 var = "`var'";
 
 
-save temp`var', replace ;
+save `temp`var'', replace ;
 };
 
-use tempfemale, clear;
-for any 
-$cov0:
-append using tempX;
+use `tempfemale', clear;
+foreach var in $cov0{;
+append using `temp`var'';
+};
 order var;
 list;
 egen id = seq();
 save  "$output_dta/means_`P`i''", replace;
 
-for any 
- $cov0
-: 
-erase tempX.dta 
-;
 };
 
 use "$output_dta/means_infocontrol.dta";
@@ -99,7 +94,10 @@ merge 1:1 id using "$output_dta/means_`P`i''";
 assert _merge == 3;
 drop _merge;
 };
-
+forval i = 2/8{;
+erase "$output_dta/means_`P`i''.dta";
+};
+erase "$output_dta/means_infocontrol.dta";
 
 drop id; 
 outsheet using "$output_tables/A3_BalanceTests.xls",replace;
@@ -126,26 +124,22 @@ local res7 "if (bench_assignment  == 1 | bench_assignment == 2)";
 
 local sfe6 "i.bgyp";
 local sfe7 "i.bgyp";
-/* Put in barangayp FE only for the baseline stpecification, not for the passport. For the passport, put in the other b_group variables */ ;
 
 forval j = 2/7{;
 
-use tempdata,clear   ;
+use `tempdata',clear   ;
 cd "$output_dta";
-cap log close;
-*log using "regoutput $ST $RES $MM.log",replace;
+
 foreach var in female $cov0{;
 local mflag "& mflag_`var' == 0";
 
 reg `var' `OO`j'' `sfe`j'' `res`j'' `mflag',robust;
 
 testparm `OO`j'';
-*gen Fstat_`var' = `r(F)';
 gen pval_`var' = `r(p)';
 };
 
 
-*collapse (mean) pval* Fstat*;
 collapse (mean) pval*;
 
 xpose,varname clear ;
@@ -158,7 +152,14 @@ use fpvalues_infotreat2,clear;
 egen id = seq();
 forval j = 2/7{;
 append using fpvalues_`OO`j'';
+
 };
+
+forval j = 2/7{;
+erase "fpvalues_`OO`j''.dta";
+
+};
+
 
 collapse (max) `OO2' `OO3' `OO4' `OO5' `OO6' `OO7' id ,by(_varname);
 sort id;

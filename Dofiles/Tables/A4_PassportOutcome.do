@@ -42,4 +42,4 @@ local R "replace";
 
 			erase  "$output_tables/A4_PassportOutcome $ST $DP.txt";
 
-exit;
+

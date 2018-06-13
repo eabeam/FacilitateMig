@@ -1,15 +1,17 @@
-/* 1_DataCleaning
+/****************************
+1_DataCleaning.do
+Unilateral Facilitation Does Not Increase Migration 
+Emily A. Beam, David McKenzie, and Dean Yang 
+
+Last updated 05 June 2018 by Emily Beam (emily.beam@uvm.edu) 
 
 Inputs: merged_data_public
 Outputs: merged_data_public2
 
-** Cleans and generates additional covariates ** 
+
+****************************/
 
 
-Last updated 22 February by Emily Beam 
-*/ 
-
-set more off
 use "$work/merged_data_public",clear
 
 
@@ -21,7 +23,7 @@ gen resp_ed = base_b8_highed1
 replace resp_ed = . if base_b8_highed1 == 19		// Invalid value
 
 forval i = 1/6{
-replace resp_ed = bench_f9_high_ed_`i' if resp_ed == . & benchpid == `i'		// aksed to fill out roster for eveyrone, not so bad. 
+replace resp_ed = bench_f9_high_ed_`i' if resp_ed == . & benchpid == `i'		
 }
 
 replace resp_ed = . if resp_ed < 0 | resp_ed > 32
@@ -135,13 +137,13 @@ recode _a6english`i' 88 = .
 // Speaking is 1
 
 replace base_scell_base = base_scell_base*10000
+
 /* Generate missing flags */
 assert female != .
 assert resp_age != .
 
 
 #delimit ;
-* Interactino - February 08, 2014; 
 
 gen _mar_domestic = base_a1_m == 1 | base_a1_m == 2;
 	replace _mar_domestic = . if base_a1_m == .	;	// 2 missing;
@@ -153,7 +155,7 @@ replace lowinc = . if hhincome == .;
 
 *Generate variable for number of children under age X, number of own child under age X ;
 
-list base_s2_age base_b5_age1 if base_s2_age != . & base_b5_age1 != . & base_s2_age != base_b5_age1;
+*list base_s2_age base_b5_age1 if base_s2_age != . & base_b5_age1 != . & base_s2_age != base_b5_age1;
 
 foreach age in 2 6 10 18{;
 gen _ch_num_age`age' = 0;
@@ -171,42 +173,20 @@ replace _anych_age`age' = 1 if _ch_num_age`age' > 0 ;
 
 
 
+* Generate missing data flags 
 
-*foreach var in  female resp_age hsgrad somevoc colgradplus interested risks hhincome hhsavings zerohhsavings everloan normassetcount extabroad immabroad hhsize r_employed applyabroad receiveremit internet _a6english1{
-foreach var in /*female resp_age*/ hsgrad somevoc colgradplus interested risks hhincome hhsavings zerohhsavings everloan normasset immabroad extabroad{
+foreach var in  hsgrad somevoc colgradplus interested risks hhincome hhsavings zerohhsavings everloan normasset immabroad extabroad{
 
-/*
 
-sum `var' if baseline == .
-local vN = `r(N)'
-if `vN' == 0{
-gen mflag_`var' = `var' == . & baseline == 1
-}
-
-if `vN' > 0{
-gen mflag_`var' = `var' == . 
-}
-*/
 gen mflag_`var' = `var' == . 
 
 replace `var' = 0 if `var' == .
 }
+
+* Generate merged stratification cells 
 gen scellbasebench = base_scell*10000 + bench_s_cell
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-*save "$work/mergedfile_wendline_062812", replace
-save "$work/merged_data_public2", replace
+save "$output_dta/merged_data_public2", replace
