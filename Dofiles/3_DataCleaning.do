@@ -35,22 +35,6 @@ replace resp_age = bigage if resp_age == .
 assert female != . 
 
 
-*merge 1:1 hhid pj_id lastname using "$specdata"
-
-
-/*
-use "/Volumes/FUPDATA/filesfull_25 May 2012.dta",clear
-rename barangay_base end_barangay_base
-rename municip_base end_municip_base
-rename household_id hhid 
-rename id_PJ pj_id
-tostring pj_id,replace
-merge 1:1 hhid pj_id using "$specdata"
-*/
-
-tabstat attrit,by(end_municip)
-tabstat attrit,by(end_barangay)
-*keep if end_municip == "SORSOGON" | end_municip == "CASTILLA" | end_municip == "MATNOG" | end_municip == "BULAN"
 
 gen fullsurvey = end_stype == "FULL"
 gen proxysurvey = end_stype == "PROXY"

@@ -78,7 +78,7 @@ do "$path/Dofiles/2_DataCleaning";		//use merged_data_public2
 										// save endline1_w2013fup
 										
 do "$path/Dofiles/3_DataCleaning"; 		//use "$work/endline1_w2013fup",replace
-										//use attritiondata
+										//use attritiondata		** Share
 										// save attritfull
 
 
@@ -97,7 +97,6 @@ do "$path/Dofiles/3_DataCleaning"; 		//use "$work/endline1_w2013fup",replace
 
 
 // In covariates - need covariates in baseline and benchmark, then baseline only. 
-//Make sure control for aslein status of household members, whenever possible. 
 
 
 /* Set up specification 
@@ -166,7 +165,7 @@ do "$table/2_3_Impacts.do";
 
 *A2 Sample attrition  ;
 swapspec $mainspec;
-swapspec attritfull baselineno4145 ascending nopval;
+swapspec attritfull baselineno4145 ascending15 nopval;
 do "$table/A2_Attrition.do";
 
 *A3 Balancing tests
