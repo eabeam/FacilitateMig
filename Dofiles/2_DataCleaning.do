@@ -1,6 +1,16 @@
-*do "$dofiles/0_3_Merge_Endline_Aug09.do"		// run every so often
+/****************************
+2_DataCleaning.do
+Unilateral Facilitation Does Not Increase Migration 
+Emily A. Beam, David McKenzie, and Dean Yang 
 
+Last updated 05 June 2018 by Emily Beam (emily.beam@uvm.edu) 
 
+Inputs: merged_data_public2, endline1_w2013fup, FUP2013
+Outputs: endline1_w2013fup
+
+****************************/
+
+#delimit cr 
 /* 			Clean Endline Survey */
 use "$output_dta/merged_data_public2", clear
 
@@ -66,227 +76,6 @@ replace base_anyhh = 1 if base_b11_ofw`i' == 1
 }
 
 
-********************************************
-*	Clean up ids in the migration tables 
-	// Clean up ids. 	
-******************************************
-
-// If the pid is missing (88) in table e3 but not in table e1, and there is an offer in table e1 and the country is the same, replace		
-//mark the adjustment with 0.1 - 
-//1. Compare same places in the roster
-		forval i = 1/3{
-		local j = `i' + 1
-		recode end_e1a_pid_`i' 88 = .
-		list end_e1*pid*`i' end_e1e*`i' end_e1h_offer*`i' end_e1*pid*`j' end_e1e*`j' end_e1h_offer*`j'  end_e3*pid*`i' end_e3f_country_`i' if end_e3_pid_`i' == 88 & end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e1e_country_`i' == end_e3f_country_`i' & end_e1e_country_`i' != ""
-		replace adjust_id = adjust_id + .1 if end_e3_pid_`i' == 88 & end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e1e_country_`i' == end_e3f_country_`i' & end_e1e_country_`i' != ""
-
-		replace end_e3_pid_`i' = end_e1a_pid_`i' if end_e3_pid_`i' == 88 & end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e1e_country_`i' == end_e3f_country_`i' & end_e1e_country_`i' != ""
-				
-				}
-				
-// If the pid is missing (88) in table e3 but not in table e1, and there is an offer in table e1 and the country is the same, replace		
-// mark the adjustment with 0.1	
-// 2. Compare different places in the roster 
-
-	forval i = 1/3{
-		forval j = 1/3{
-	di in red "i = `i' j = `j'"
-		list end_e1*pid*`i' end_e1e*`i' end_e1h_offer*`i' end_e1*pid*`j' end_e1e*`j' end_e1h_offer*`j'  end_e3*pid*`j' end_e3f_country_`j' if end_e3_pid_`j' == 88 & end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e1e_country_`i' == end_e3f_country_`j' & end_e1e_country_`i' != ""
-		replace adjust_id = adjust_id + .1 if end_e3_pid_`j' == 88 & end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e1e_country_`i' == end_e3f_country_`j' & end_e1e_country_`i' != ""
-
-		replace end_e3_pid_`j' = end_e1a_pid_`i' if end_e3_pid_`j' == 88 & end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e1e_country_`i' == end_e3f_country_`j' & end_e1e_country_`i' != ""
-			}	
-				}		
-				
-				
-				
-// Recode invalid values - Add 0.001
-		foreach var in e1a_pid e2_pid e3_pid e4a_pid{
-		forval i = 1/3{
-		replace adjust_id = adjust_id + 0.001 if end_`var'_`i' == 11 | end_`var'_`i' == 22 | end_`var'_`i' == 13
-		
-		replace end_`var'_`i' = 1 if end_`var'_`i' == 11 & maxid < 11
-		replace end_`var'_`i' = 2 if end_`var'_`i' == 22 & maxid < 22
-		replace end_`var'_`i' = 3 if end_`var'_`i' == 13 & maxid < 13		// Verified visually
-
-}
-}
-
-// Recode an individual value - looks like missing, but wasn't entered - visually confirmed using pdf files. 
-
-
-
-// Recode when an an id as missing when it is listed on searching and there is nothing else listed in the search 
-// 10 to adj count
-forval i = 1/3{
-
-list  end_mun* hhid_pjid end_e1a_pid_`i' end_e1*_`i' if end_e1a_pid_`i' != . & end_e1a_pid_`i' != 88 & (end_e1b_type_`i' == . | end_e1b_type_`i' == 88 ) & (end_e1e_country_`i' == "" | end_e1e_country_`i' == "8888")
-replace adjust_id = adjust_id + 10 if end_e1a_pid_`i' != . & end_e1a_pid_`i' != 88 & (end_e1b_type_`i' == . | end_e1b_type_`i' == 88 ) & (end_e1e_country_`i' == "" | end_e1e_country_`i' == "8888")
-replace end_e1a_pid_`i' = . if end_e1a_pid_`i' != . & end_e1a_pid_`i' != 88 & (end_e1b_type_`i' == . | end_e1b_type_`i' == 88 ) & (end_e1e_country_`i' == "" | end_e1e_country_`i' == "8888")
-
-list end_mun* hhid_pjid end_e2_pid_`i' end_e2*_`i' if end_e2_pid_`i' != . & end_e2_pid_`i' != 88 & (end_e2b_attendint_`i' == . | end_e2b_attendint_`i' == 88) & (end_e2d_dateint_yyyy_`i' == 8888 | end_e2d_dateint_yyyy_`i' == .) & (end_e2c_whynotcode_`i' == . | end_e2c_whynotcode_`i' == 88)
-replace adjust_id = adjust_id + 10 if end_e2_pid_`i' != . & end_e2_pid_`i' != 88 & (end_e2b_attendint_`i' == . | end_e2b_attendint_`i' == 88) & (end_e2d_dateint_yyyy_`i' == 8888 | end_e2d_dateint_yyyy_`i' == .) & (end_e2c_whynotcode_`i' == . | end_e2c_whynotcode_`i' == 88)
-replace end_e2_pid_`i' = . if end_e2_pid_`i' != . & end_e2_pid_`i' != 88 & (end_e2b_attendint_`i' == . | end_e2b_attendint_`i' == 88) & (end_e2d_dateint_yyyy_`i' == 8888 | end_e2d_dateint_yyyy_`i' == .) & (end_e2c_whynotcode_`i' == . | end_e2c_whynotcode_`i' == 88)
-
-
-list  end_mun* hhid_pjid end_e3_pid_`i' end_e3*_`i' if end_e3_pid_`i' != . & end_e3_pid_`i' != 88 & (end_e3b_accept_`i' == . | end_e3b_accept_`i' == 88) & (end_e3g_migrate_`i' == . | end_e3g_migrate_`i' == 88)
-replace adjust_id = adjust_id + 10 if end_e3_pid_`i' != . & end_e3_pid_`i' != 88 & (end_e3b_accept_`i' == . | end_e3b_accept_`i' == 88) & (end_e3g_migrate_`i' == . | end_e3g_migrate_`i' == 88)
-replace end_e3_pid_`i' = . if end_e3_pid_`i' != . & end_e3_pid_`i' != 88 & (end_e3b_accept_`i' == . | end_e3b_accept_`i' == 88) & (end_e3g_migrate_`i' == . | end_e3g_migrate_`i' == 88)
-
-
-list  end_mun* hhid_pjid end_e4a_pid_`i' end_e4*_`i' if end_e4a_pid_`i' != . & end_e4a_pid_`i' != 88 & end_e4b_datemig_mm_`i' == . & end_e4c_workcode_`i' == .
-replace adjust_id = adjust_id + 10  if end_e4a_pid_`i' != . & end_e4a_pid_`i' != 88 & end_e4b_datemig_mm_`i' == . & end_e4c_workcode_`i' == .
-replace end_e4a_pid_`i' = .  if end_e4a_pid_`i' != . & end_e4a_pid_`i' != 88 & end_e4b_datemig_mm_`i' == . & end_e4c_workcode_`i' == .
-
-
-}
-
-
-
-
-
-// Identify household ids with potential individual adjustments 
-		// 1. ids are not consistent throughout
-		
-
-
-
-		foreach var in e1a_pid e2_pid e3_pid e4a_pid{
-		forval i = 1/3{
-		
-		
-		list hhid_pjid r_pid maxid end_*pid*`i' if end_`var'_`i' > maxid & end_`var'_`i' != . & end_`var'_`i' != 88
-		replace prob1 = 1 if end_`var'_`i' > maxid & end_`var'_`i' != . & end_`var'_`i' != 88
-
-		}
-		}
-		
-	
-// Listed and corrected individually:, 99995230, 99996113,, N0090_BL9999, N0096_CA9999 99996236, 99996386, 99996285
-
-// Listed and not corrected: 99994658	// Person 5 listed as enrolling in PJ, but no way to confirm who that is
-
-
-// Identify household ids with potential individual adjustments 
-		// 2. ids are missing for only some tables 
-
-forval i = 1/3{
-local j = `i' + 1
-di in red "test 1 v 2, i = `i'"
-list hhid_pjid r_pid maxid end_*pid*`i'  if end_e1a_pid_`i' != . & end_e1g_int_`i' == 1 & end_e2_pid_`i' != . & end_e2_pid_`i' != 88 & end_e2_pid_`i' != end_e1a_pid_`i' & end_e2_pid_`i' != end_e1a_pid_`j'
-di in red "test 1 v3, i = `i'"
-list hhid_pjid r_pid maxid end_*pid*`i'  if end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e3_pid_`i' != . & end_e3_pid_`i' != 88 & end_e3_pid_`i' != end_e1a_pid_`i' & end_e3_pid_`i' != end_e1a_pid_`j'
-di in red "test 3 v 4, i = `i'"
-list hhid_pjid r_pid maxid end_*pid*`i'  if end_e3_pid_`i' != . & end_e3g_migrate_`i'== 1 & end_e4a_pid_`i' != . & end_e4a_pid_`i' != 88 & end_e3_pid_`i' != end_e4a_pid_`i' & end_e4a_pid_`i' != end_e3_pid_`j'
-
-}
-
-// Listed and corrected individually: 99992867 99991496 99998961 N0064_CN9999 N0020_PI9999
-
-
-
-
-
-// Generate indicators for individual level adjustments 
-
-
-
-
-#delimit ;
-foreach var in 99995230 99996113 N0090_BL9999 N0096_CA9999 99996236 99996386 99996285
-				99992867 99991496 99998961 N0064_CN9999 N0020_PI9999 N0069_MA9999 N0239_BL9999 N0031_SN9999 99994604{;
-		replace adjust_id = adjust_id + .01 if hhid_pjid == "`var'" ;
-		};
-		
-#delimit cr
-			
-	// Make individual level adjustments (confirmed visually in pdf files)
-	
-		replace end_e2_pid_1 = 2 if end_e2_pid_1 == 1 & hhid_pjid == "99994604" // Visually confirmed - only 1 entry in e1, footnote in e2 says "my respondent"
-
-		replace end_e2_pid_1 = 2 if end_e2_pid_1 == 1 & hhid_pjid == "N0031_SN9999" // Visually confirmed - only 1 entry in e1, same date in e1 and e2, DH position
-		
-		replace end_e2_pid_1 = 2 if end_e2_pid_1 == 3 & hhid_pjid == "N0239_BL9999" // Visually confirmed - enumeraotr manually chaned from 2/3 in all but this entry
-		
-		replace end_e4a_pid_1 = 6 if end_e4a_pid_1 == 1 & hhid_pjid == "N0069_MA9999" //Visually confirmed (not corrected in roster)
-		replace end_e2_pid_1 = 6 if end_e2_pid_1 == 88 & hhid_pjid == "N0069_MA9999" //Visually confirmed (not corrected in roster)
-			
-		replace end_e3_pid_1 = 2 if end_e3_pid_1 == 1 & hhid_pjid == "99991496"		// corrected in 0_4
-		replace end_e3_pid_1 = 2 if end_e3_pid_1 == 1 & hhid_pjid == "N0064_CN9999"
-				
-		replace end_e2_pid_1 = 2 if end_e2_pid_1 == 1 & hhid_pjid == "99992867"		// equal to 2 in section 1, but not others. occupation is caregiver, and #2 is female
-		replace end_e3_pid_1 = 2 if end_e3_pid_1 == 1 & hhid_pjid == "99992867"
-		replace end_e4a_pid_1 = 2 if end_e4a_pid_1 == 88 & hhid_pjid == "99992867"
-
-
-		replace end_e1a_pid_1 = 2 if end_e1a_pid_1 == 3 & hhid_pjid == "99995230" // Verified visually - enumerator accidentally skipped al ine in the roster, so #3 became #2
-		replace end_d1a_pid_1 = 2 if end_d1a_pid_1 == 3 & hhid_pjid == "99995230" // Verified visually - enumerator accidentally skipped al ine in the roster, so #3 became #2
-		replace end_e1a_pid_2 = 7 if end_e1a_pid_2 == 8 & hhid_pjid == "99996386" // Verified visually - enumerator accidentally skipped al ine in the roster, so #8 became #7
-		replace end_e1a_pid_1 = 4 if end_e1a_pid_1 == 5 & hhid_pjid == "N0096_CA9999" // Verified visually - enumerator accidentally skipped al ine in the roster, so #5 became #4
-		replace end_d1a_pid_01 = 4 if end_d1a_pid_01 == 5 & hhid_pjid == "N0096_CA9999" // Verified visually - enumerator accidentally skipped al ine in the roster, so #5 became #4
-		replace end_e1a_pid_2 = 2 if end_e1a_pid_2 == 4 & hhid_pjid == "99996236" // Verified visually  - 2nd line accidentally entered 4 despite being same type of job as 1st line. 
-
-		replace end_e2_pid_1 = 7 if end_e2_pid_1 == 6 & hhid_pjid == "99996285"
-		replace end_e3_pid_1 = 7 if end_e3_pid_1 == 6 & hhid_pjid == "99996285"
-		replace end_e4a_pid_1 = 7 if end_e4a_pid_1 == 8 & hhid_pjid == "99996285" // Verified visually  -PErson who migrated in section e3 is #7, there is no #8 
-		
-		replace end_e3_pid_1 = 1 if end_e3_pid_1 == 88 & hhid_pjid == "99998961" // Verified visually - enumerator accidentally left blank, but is in line with 5 applications for overseas work
-		replace end_e4a_pid_1 = 1 if end_e4a_pid_1 == 88 & hhid_pjid == "99998961" // Verified visually - enumerator accidentally left blank, but is in line with 5 applications for overseas work
-
-		foreach var in e1a_pid e2_pid e3_pid e4a_pid {
-		replace end_`var'_1 = 3 if end_`var'_1 == . & hhid_pjid == "N0020_PI9999" // Verified visually - enumerator accidentally wrote 99 instead of 3, but has to be 3
-		}
-
-		
-		foreach var in e1a_pid e2_pid e3_pid {
-		replace end_`var'_1 = 5 if end_`var'_1 == 6 & hhid_pjid == "N0090_BL9999" // Verified visually - enumerator accidentally skipped al ine in the roster, so #6 became #5
-		}
-		replace end_d1a_pid_01 = 5 if end_d1a_pid_01 == 6 & hhid_pjid == "N0090_BL9999" // Verified visually - enumerator accidentally skipped al ine in the roster, so #6 became #5
-		
-		foreach var in e1a_pid {
-		forval i = 1/2{
-		replace end_`var'_`i' = 2 if end_`var'_`i' == 3 & hhid_pjid == "99996113" // Verified visually - there is no #3, but ony #2 has a job, which she lists as accepting in section D
-		}
-		}
-		replace end_d1a_pid_01 = 2 if end_d1a_pid_01 == 3 & hhid_pjid == "99996113" // Verified visually - enumerator accidentally skipped al ine in the roster, so #6 became #5
-		replace end_d1a_pid_02 = 2 if end_d1a_pid_02 == 3 & hhid_pjid == "99996113" // Verified visually - enumerator accidentally skipped al ine in the roster, so #6 became #5
-		
-
-forval i = 1/3{
-local j = `i' + 1
-di in red "test 1 v 2, i = `i'"
-list  end_mun* hhid_pjid r_pid maxid end_e1a_pid* end_e2_pid*  if end_e1a_pid_`i' != . & end_e1g_int_`i' == 1 & end_e2_pid_`i' != . & end_e2_pid_`i' != 88 & end_e2_pid_`i' != end_e1a_pid_`i' & end_e2_pid_`i' != end_e1a_pid_`j'
-di in red "test 1 v3, i = `i'"
-list  end_mun*  hhid_pjid r_pid maxid end_e1a_pid* end_e3_pid*  if end_e1a_pid_`i' != . & end_e1h_offer_`i' == 1 & end_e3_pid_`i' != . & end_e3_pid_`i' != 88 & end_e3_pid_`i' != end_e1a_pid_`i' & end_e3_pid_`i' != end_e1a_pid_`j'
-di in red "test 3 v 4, i = `i'"
-list  end_mun* hhid_pjid r_pid maxid end_e3_pid* end_e4a_pid*  if end_e3_pid_`i' != . & end_e3g_migrate_`i'== 1 & end_e4a_pid_`i' != . & end_e4a_pid_`i' != 88 & end_e3_pid_`i' != end_e4a_pid_`i' & end_e4a_pid_`i' != end_e3_pid_`j'
-
-}
-
-
-		forval i = 1/3{
-		decode end_e2e_intloc_`i',gen(end_e2eintloc`i')
-		
-		list end_e1h_offer_`i' end_e2*`i' if end_e2eintloc`i' == "THRU PHONE"
-		list end_e1h_offer_`i' end_e2*`i' if (end_e2b_attendint_`i' == 88 ) & end_e2d_dateint_yyyy_1 >=2010 & end_e2d_dateint_yyyy_1 <=2012
-
-			replace end_e2b_attendint_`i' = 1 if end_e2b_attendint_`i' == 2 & end_e2eintloc`i' == "THRU PHONE"
-
-			replace end_e2b_attendint_`i' = 1 if end_e2b_attendint_`i' == 88 & end_e2d_dateint_yyyy_1 >=2010 & end_e2d_dateint_yyyy_1 <=2012				
-				
-				}
-				
-/* Potentially problematic, not changed: N0158_SJ - confirmed to be okay 
-							99991666 - cannot confirm whether it is 4 or 5
-							99998962  - ok
-							99998931 - ok
-							99995170 - ok
-							99998958  - ok
-							*/ 
-
-							 
-
-			
 
 
 ******************************************
@@ -338,7 +127,6 @@ gen end_hhofwnum = 0
 		replace end_hhofwnum = end_hhofwnum + 1 if end_b_ofw_`i' == 1
 		}
 		
-	tab end_hhofwnum
 		
 gen base_hhofw = 0
 gen base_hhofwnum = 0
@@ -346,8 +134,7 @@ gen base_hhofwnum = 0
 	replace base_hhofw = 1 if base_b11_ofw`i' == 1
 	replace base_hhofwnum = base_hhofwnum + 1 if base_b11_ofw`i' == 1
 	}
-	tab base_hhofwnum
-	tab base_hhofwnum end_hhofwnum
+
 		
 		
 		
@@ -414,7 +201,7 @@ sum _endc4steps*
 				
 				forval i = 1/7{
 				decode end_e1b_typespec_`i',gen(end_e1bspec_`i')
-				list end_e1b_type_`i' end_e1bspec_`i' if (end_e1b_type_`i' == -2 | end_e1b_type_`i' == 88 | end_e1b_type_`i' == . ) & end_e1bspec_`i' != "" & end_e1bspec_`i' != "8888"
+			*	list end_e1b_type_`i' end_e1bspec_`i' if (end_e1b_type_`i' == -2 | end_e1b_type_`i' == 88 | end_e1b_type_`i' == . ) & end_e1bspec_`i' != "" & end_e1bspec_`i' != "8888"
 						
 						replace end_e1b_type_`i' = 2 if (end_e1b_type_`i' == 88) & end_e1bspec_`i' == "WEBSITE"
 
@@ -543,7 +330,7 @@ sum _endc4steps*
 		/* General to make sure those accepting or rejecting invitiations to interview are marked as interviewing */
 		
 		foreach var in hh resp {
-		list hhid_pjid if (`var'_ofwattendint == 1 ) & `var'_ofwinvite == 0
+		*list hhid_pjid if (`var'_ofwattendint == 1 ) & `var'_ofwinvite == 0
 		replace `var'_ofwinvite = 1 if `var'_ofwattendint == 1 
 		}
 	
@@ -551,8 +338,8 @@ sum _endc4steps*
 		
 		forval i = 1/3{
 		decode end_e3h_whynotspec_`i',gen(end_e3h_whynot`i')
-		list hhid_pjid end_e2_pid_`i' end_e2b_attendint_`i' end_e2c_whynotcode_`i' end_e2c_whynotspec_`i' if end_e2b_attendint_`i' == 2 & (end_e2c_whynotcode_`i' != 88 | end_e2c_whynotspec_`i' != .) & hh_ofwinvite == 0
-		list hhid_pjid end_e3*`i' if hh_ofwaccept == 1 & hh_ofwoffer == 0
+		*list hhid_pjid end_e2_pid_`i' end_e2b_attendint_`i' end_e2c_whynotcode_`i' end_e2c_whynotspec_`i' if end_e2b_attendint_`i' == 2 & (end_e2c_whynotcode_`i' != 88 | end_e2c_whynotspec_`i' != .) & hh_ofwinvite == 0
+		*list hhid_pjid end_e3*`i' if hh_ofwaccept == 1 & hh_ofwoffer == 0
 
 		replace hh_ofwoffer = 1 if hh_ofwaccept == 1 & end_e3b_accept_`i' == 1 & end_e3h_whynot`i' != "WASNT CONTACTED" & end_e3h_whynot`i' != "OVER AGE" 
 		replace hh_ofwinvite = 1 if end_e2b_attendint_`i' == 2 & (end_e2c_whynotcode_`i' != 88 | end_e2c_whynotspec_`i' != .)
@@ -576,44 +363,35 @@ sum _endc4steps*
 			replace hh_`x' = . if end_stype == "LOG" 
 
 		}
-		tab hh_ofwinvite hh_ofwinviten								// none that are 1 in hh_ofwinviten and 0 in hh_ofwinvite
-		tab hh_ofwinvite hh_ofwattend								// none that are 1 in hh_ofwattend and 0 in hh_ofwinvite
-		tab hh_ofwinvite hh_ofwattend  if hh_ofwinviten == 0		// want none that are 0 in hh_ofwattend and 1 in ofwinvite, but okay (bc some ommissions)
-		
+
 		
 		// Note that I code that to not accept offer, you have to have been ffered a job in section e2. 
 		
-		tab hh_ofwoffer hh_ofwaccept								// none that are accept and 0 in offer (2) - Just going to ignore it. 
-		tab hh_ofwoffer hh_ofwnotacceptoff							// none that are not accept and 0 in offer (0) 
-		
-		list hhid_pjid if hh_ofwoffer == 0 & (hh_ofwaccept == 1 | hh_ofwnotaccept == 1)
-		
+
 		
 		
 		// Characteristics of Applicant 
 
 		qui tostring end_b_*,replace
-		*foreach var in first middle last suffix rel age sex ed work mnl ofw{
+
 		foreach var in rel age sex ed work mnl ofw{
-		gen end_resp_`var' = ""
-		forval i = 1/3{
-		gen end_mig_`var'`i' = ""
-		forval j = 1/11{
-		replace end_mig_`var'`i' =  end_b_`var'_`j' if end_e3_pid_`i' == `j'
-		if `i' == 1{
-		replace end_resp_`var' = end_b_`var'_`j' if r_pid == `j'
-		}
-		}
-		}
-		tostring end_mig_`var'*,replace
-		}
+			gen end_resp_`var' = ""
+			
+			forval i = 1/3{
+				gen end_mig_`var'`i' = ""
+					
+					forval j = 1/11{
+						replace end_mig_`var'`i' =  end_b_`var'_`j' if end_e3_pid_`i' == `j'
+						
+						if `i' == 1{
+						replace end_resp_`var' = end_b_`var'_`j' if r_pid == `j'
+						}
+					}
+				}
+			tostring end_mig_`var'*,replace
+			}
 		
-		forval i = 1/3{
 
-list hhid_pjid r_pid maxid end_e1a_pid_1 end_e2_pid_1 end_e3*   end_b_age_* if  r_pid != end_e3_pid_`i' & end_e3g_migrate_`i' == 1 & ( end_e3_pid_`i' == . | end_e3_pid_`i' == 88)
-list hhid_pjid end*mun* if  r_pid != end_e3_pid_`i' & end_e3g_migrate_`i' == 1 & ( end_e3_pid_`i' == . | end_e3_pid_`i' == 88)
-
-		}
 	
 
 		
@@ -626,7 +404,7 @@ list hhid_pjid end*mun* if  r_pid != end_e3_pid_`i' & end_e3g_migrate_`i' == 1 &
 		qui{
 		foreach munname in BARCELONA JUBAN BULAN CASIGURAN CASTILLA DONSOL GUBAT IROSIN MAGALLANES MATNOG PILAR PRIETO MAGDALENA{
 			*	di in red "replacing in other section `munname' with `muncount'"
-				list end_d1dname_`i' if  regexm(end_d1dname_`i',"`munname'") & end_d1d_wherecode_`i' > 14
+				*list end_d1dname_`i' if  regexm(end_d1dname_`i',"`munname'") & end_d1d_wherecode_`i' > 14
 				replace end_d1d_wherecode_`i' = `muncount' if regexm(end_d1dname_`i',"`munname'")
 				replace end_d1dname_`i' = "" if regexm(end_d1dname_`i',"`munname'")
 				local muncount = `muncount' + 1
@@ -677,7 +455,7 @@ list hhid_pjid end*mun* if  r_pid != end_e3_pid_`i' & end_e3g_migrate_`i' == 1 &
 			forval i = 1/6{
 			cap decode end_d1b_typespc_`i',gen(end_d1bspec_`i')
 			
-			list end_d1b_type_`i' end_d1bspec_`i' if (end_d1b_type_`i' == -2 | end_d1b_type_`i' == 88 | end_d1b_type_`i' == . ) & end_d1bspec_`i' != "" & end_d1bspec_`i' != "8888"
+			*list end_d1b_type_`i' end_d1bspec_`i' if (end_d1b_type_`i' == -2 | end_d1b_type_`i' == 88 | end_d1b_type_`i' == . ) & end_d1bspec_`i' != "" & end_d1bspec_`i' != "8888"
 			replace end_d1b_type_`i' = 3 if end_d1b_type_`i' == 88 & (end_d1bspec_`i' == "DIRECT HIRE" | end_d1bspec_`i' == "JOB FAIR")
 			replace end_d1b_type_`i' = 3 if end_d1b_type_`i' == -2 & end_d1c_code_`i' != . & end_d1c_code_`i' != -2
 
@@ -758,9 +536,7 @@ gen _i3currpass = end_i3_currpass
 	recode _i3currpass 3 = 0	// Expired
 	replace _i3currpass = 0 if _i2passever == 0
 	
-	tab _i2 _i3 	// 33 where I2 passever == 1 & I3 currpass == missing	12 where full proxy completed but no outcome 
-	tab end_i2 end_i3 if _i2 == 1 & _i3currpass == .,mi
-	
+
 	
 gen end_currpass = 0 if _i3 != . 		// exclude the 33 missing current pass ones. 
 	replace end_currpass = 1 if end_i3 == 1
@@ -769,7 +545,7 @@ gen end_everpass = 0 if _i2 != .
 	replace end_everpass = 1 if _i2 == 1
 	
 	
-	list hhid_pjid end_mun*  end_stype if _i2 == 1 & _i3 == .
+	*list hhid_pjid end_mun*  end_stype if _i2 == 1 & _i3 == .
 	
 	
 	
@@ -1063,58 +839,6 @@ recode end_selfoffer 888 = .
 recode end_selfoffer 88 = .
 		
 		
-/* Midline - knowldege */ 
-
-//mid_know_lend50k _rate50k mid_know_norm50k mid_placementfee mid_placement_norm mid_othrplace mid_othrplace_norm mid_dkwage mid_avgwagecountry mid_dkcost mid_avgcostcountry
-
-gen mid_know_lend50k = bench_d13_know_lender == 1
-	replace mid_know_lend50k = . if bench_d13 == 9 | bench_d13 == .
-
-gen _rate50k = bench_d15_i if bench_d15_i != . & bench_d15_f == 2
-	replace bench_d15_i = . if bench_d15_i == -2 | bench_d15_i == 9999
-replace _rate50k = bench_d15_i*2 if bench_d15_i != . & bench_d15_f == 1	/* Bi-monthly */  
-replace _rate50k = bench_d15_i/3 if bench_d15_i != . & bench_d15_f == 3	/* Quarterly */  
-replace _rate50k = bench_d15_i/6 if bench_d15_i != . & bench_d15_f == 4	/* 2X per year */ 
-replace _rate50k = bench_d15_i/12 if bench_d15_i != . & bench_d15_f == 5	/* Annually */ 	
-replace _rate50k = bench_d15_i / bench_d15_t if bench_d15_i != . & bench_d15_t != .
-gen difrate50k = _rate50k - 2.5
-sum difrate50k
-local mean_dif = `r(mean)'
-local sd_dif = `r(sd)'
-
-gen mid_know_norm50k = (difrate50k - `mean_dif') / `sd_dif'
-drop difrate50k
-
-
-	
-gen mid_placementfee = bench_d4_avg_placement
-	replace mid_placementfee = . if bench_d4_avg_placement == -2 | bench_d4_avg_placement == 9
-
-gen difplacement = mid_placementfee - 25000
-sum difplacement
-local mean_dif = `r(mean)'
-local sd_dif = `r(sd)'
-
-gen mid_placement_norm = (difplacement - `mean_dif') / `sd_dif'
-drop difplacement
-
-
-gen mid_dkplacementfee = bench_d4_avg_placement == -2
-	replace mid_dkplacementfee = . if bench_d4_avg_placement == .
-	
-gen mid_othrplace = bench_d5_avg_otr_expenses
-	replace mid_othrplace = . if bench_d5_avg_otr_expenses == -2	
-
-gen difplacement = mid_othrplace - 14445
-sum difplacement
-local mean_dif = `r(mean)'
-local sd_dif = `r(sd)'
-
-gen mid_othrplace_norm = (difplacement - `mean_dif') / `sd_dif'
-drop difplacement
-
-
-
 /* Average wage, six countries */ 
 
 
@@ -1146,12 +870,7 @@ gen end_enroll = end_f6_enroll24
 	recode end_enroll 2 = 0
 	recode end_enroll 88 = .
 				
-			*	intensiveprep
-			
-				
-			*		infovariables			/* Make information variables */ 
-			
-				
+
 #delimit ;
 gen _bencheverpass = 0 ;
 	replace _bencheverpass = 1 if bench_a1_valid == 1;
@@ -1188,24 +907,6 @@ drop _mergeroster2013
 		gen fup2013 = _merge2013 == 3
 		drop _merge2013
 		
-		
-tab adjust_id	if fup2013 == 1	// 21 potential issues, though 10 of them are just replacing a missing value
-// Check any where the status changed - could be because offer changed
-*list hhid_pjid adjust_id a_status* if adjust_id > 0 & fup2013 == 1		// one is 2 and one is 3
-// Check 1st because only 1 enry for these
-*list hhid_pjid adjust_id a_status* pid_1_F13 end_e3_pid_1 r_pid if adjust_id > 0 & fup2013 == 1		// one is 2 and one is 3
-
-replace pid_1_F13 = 5 if hhid_pjid == "N0090_BL9999" 		// Adjust pid to match earlier change
-
-assert pid_1_F13 == end_e3_pid_1 if adjust_id > 0 & fup2013 == 1 & hhid_pjid != "N0107_BA9999"
-// Only 2 are different - and that' N0107_BA9999 becuase missing at end_e3_pid_1 , because that section is blank
-// The main one is N0090_BL! 
-
-
-
-//
-		
-		
 
 // Clean 2013 follow-up data
 
@@ -1223,7 +924,7 @@ assert a1_whoint != . if fup2013 == 1
 
 tab a_status_1 if fup2013 == 1,mi 
 
-list a_status_1 hhid_pjid if fup2013 == 1 & (a_status_1  < 1 | a_status_1 > 3 )
+*list a_status_1 hhid_pjid if fup2013 == 1 & (a_status_1  < 1 | a_status_1 > 3 )
 
 /*Definitions
 	resp_anymig_orig = any offer in endline survey that is confirmed as having led to migration
@@ -1249,17 +950,12 @@ tab hh_newmig if fup2013 == 1
 tab hh_anymig_orig hh_newmig	if fup2013 == 1	// 42% any migratino - with new ones. 
 
 
-tab hh_ofwmigrate hh_anymig_orig
-
 gen hh_anymig_2013fup = (hh_anymig_orig == 1 | hh_newmig == 1) & (end_stype  == "FULL" | end_stype == "PROXY")
 gen hh_anymig_origbroad = (hh_anymig_orig == 1 | hh_ofwmigrate == 1) & (end_stype  == "FULL" | end_stype == "PROXY")
 
 
 replace hh_anymig_2013fup = . if end_stype == "LOG" 
 replace hh_anymig_origbroad = . if end_stype == "LOG" 
-
-
-tab hh_ofwmigrate hh_anymig_2013fup		// 28 new, 8 missing 
 
 gen hh_anymig_revise = hh_anymig_orig
 
@@ -1268,7 +964,7 @@ gen varX = 0
 forval i = 1/3{
 forval j= 1/3{
 replace varX = 1 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & d8_migrate_`j' == 1
-list a_status* a_position* a_country* a_offerdate* pid*F13 d2*F13 d3*F13 d4*F13 d8_migrate* d1_pid*F13 dt2*F13 hhid_pjid if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & a_offerdate_yyyy_`i' == d2_offerdate_yyyy_`j'& d8_migrate_`j' == 1
+*list a_status* a_position* a_country* a_offerdate* pid*F13 d2*F13 d3*F13 d4*F13 d8_migrate* d1_pid*F13 dt2*F13 hhid_pjid if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & a_offerdate_yyyy_`i' == d2_offerdate_yyyy_`j'& d8_migrate_`j' == 1
 replace hh_anymig_revise = 1 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & a_offerdate_yyyy_`i' == d2_offerdate_yyyy_`j'& d8_migrate_`j' == 1
 *list hhid_pjid if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & d8_migrate_`j' == 1
 }
@@ -1329,7 +1025,7 @@ gen varX = 0
 forval i = 1/3{
 forval j= 1/3{
 replace varX = 1 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & d8_migrate_`j' == 1 & pid_`i'_F13 == r_pid
-list hhid_pjid  r_pid a_status* a_position* a_country* a_offerdate* pid*F13 d2*F13 d3*F13 d4*F13 d8_migrate* d1_pid*F13 dt2*F13 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & a_offerdate_yyyy_`i' == d2_offerdate_yyyy_`j' & pid_`i'_F13 == r_pid & d8_migrate_`j' == 1
+*list hhid_pjid  r_pid a_status* a_position* a_country* a_offerdate* pid*F13 d2*F13 d3*F13 d4*F13 d8_migrate* d1_pid*F13 dt2*F13 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & a_offerdate_yyyy_`i' == d2_offerdate_yyyy_`j' & pid_`i'_F13 == r_pid & d8_migrate_`j' == 1
 replace resp_anymig_revise = 1 if a_status_`i' != 1 & pid_`i'_F13  == dt2_pid_`j'_F13 & a_offerdate_yyyy_`i' == d2_offerdate_yyyy_`j'& d8_migrate_`j' == 1 & r_pid == pid_`i'_F13
 }
 }

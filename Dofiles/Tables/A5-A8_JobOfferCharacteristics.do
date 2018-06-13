@@ -184,7 +184,7 @@ tab _JO_whynot_acceptmig if _JOrespoffer_whynot == 1,sort;
 tab _JO_whynot_acceptmig _JO_posregion if _JOrespoffer_whynot == 1;
 
 
-exit;
+
 
 
 

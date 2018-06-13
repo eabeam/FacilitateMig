@@ -5,7 +5,9 @@
 			
 			
 	Last updated: 
-	05 June 2018
+	13 June 2018
+	
+	Code created by Emily Beam and Karl Rubio.
 */
 
 			
@@ -14,7 +16,7 @@ version 13
 ****************************************
 *	Install necessary packages 
 ****************************************
-ssc install outreg2
+*ssc install outreg2
 
 ****************************************
 *	Set global pathways 
@@ -44,7 +46,6 @@ do "$path/Dofiles/swap_specification.do"
 
 
 
-
 ****************************************
 *	Set covariates
 ****************************************
@@ -61,7 +62,7 @@ global cov0 "resp_age hsgrad somevoc colgradplus interested risks hhincome hhsav
 			everloan normasset immabroad extabroad hhsize r_employed applyabroad receiveremit internet";
 
 
-swapspec $mainspec;
+
 
 
 **************************************************
@@ -90,47 +91,7 @@ do "$path/Dofiles/3_DataCleaning"; 		//use "$work/endline1_w2013fup",replace
 *	Uses $work/attritfull for most files 
 * 	See $mainspec at top
 * 	Run swap_specification prior to running analysis files
-**************************************************
-
-
-
-
-
-// In covariates - need covariates in baseline and benchmark, then baseline only. 
-
-
-/* Set up specification 
-	(1) run swapspec: 
-	(2) use file: attritfull.dta
-	(3) sample restriction: benchmark
-	(4) treatment sets: passtreat
-	(5) report pvals? nopval
-	
-
-*/ 
-
-*swapspec attritfull benchmark passtreat  nopval
-
-// Produce endline1.dta
-/* Regression specifications 
-
-Data
-0. All					all
-1. Baseline only		baseline
-2. Benchmark (+Pilot)	benchmark
-3. Benchmark only		benchmarkonly
-
-Treatments
-1. Info dummies			infodummy
-2. Info treatmetns		infotreat
-3. passport treat		passtreat
-4. passport and infotreats	passinfotreat
-
-Options: 
-pval: Report p-values and se
-nopval: Only se
-
-*/;
+*************************************************;
 
 
 
@@ -180,19 +141,19 @@ swapspec $mainspec;
 do "$table/A4_PassportOutcome.do";
 
 * Descriptive tables;
-*A5 Jobs offered, by position type
-*A6 Jobs offered, by country
-*A7 Migration outcomes of all jobs offered as of 2012, by region
-*A8 Reported reasons for not migrating, conditional on job offer, by region;
+	*A5 Jobs offered, by position type
+	*A6 Jobs offered, by country
+	*A7 Migration outcomes of all jobs offered as of 2012, by region
+	*A8 Reported reasons for not migrating, conditional on job offer, by region;
 
-
-* Run Programs 
-* Clean country names;
-do "$table/countryreg.do";
-* Clean position name;
-do "$table/position_74joboffer.do";
-* Clean why people do not accept jobs;
-do "$table/whynot_74joboffer.do";
+	* Run Programs 
+	
+	* Clean country names;
+		do "$table/countryreg.do";
+	* Clean position name;
+		do "$table/position_74joboffer.do";
+	* Clean why people do not accept jobs;
+		do "$table/whynot_74joboffer.do";
 
 swapspec $mainspec
 do "$table/A5-A8_JobOfferCharacteristics.do";
@@ -209,7 +170,7 @@ do "$table/A5-A8_JobOfferCharacteristics.do";
 
 *A10 Full set of coefficients from T2
 *A11 Full set of coefficients from T3
-	* See Tables 2/3 results
+	* See Tables 2/3 output
 
 *A12 Full set of coefficients from T2, INCLUDING AGE 41-45
 *A13 Full set of coefficients from T3, INCLUDING AGE 41-45;
@@ -218,3 +179,4 @@ do "$table/A5-A8_JobOfferCharacteristics.do";
 		do "$table/2_3_Impacts.do";
 
 
+log close;

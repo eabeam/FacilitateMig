@@ -23,6 +23,7 @@ gen noattrit = 1 - attrit;
 
 local R "replace";
 
+drop aa_assign;		// 13 June 2018 revision (comment out to replicate original table)
 
 	sum end_ofww if $controltype == 1;
 	local depavg = `r(mean)';

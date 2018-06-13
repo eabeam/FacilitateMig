@@ -1,4 +1,14 @@
+/****************************
+3_DataCleaning.do
+Unilateral Facilitation Does Not Increase Migration 
+Emily A. Beam, David McKenzie, and Dean Yang 
 
+Last updated 05 June 2018 by Emily Beam (emily.beam@uvm.edu) 
+
+Inputs: endline1_w2013fup, attritiondata
+Outputs: attritfull
+
+****************************/
 use "$output_dta/endline1_w2013fup", clear
 
 merge 1:1 hhid_pjid  using "$work/attritiondata",gen(_mall) 
@@ -157,7 +167,7 @@ tab base_interv_base bench_as if treatgroup1 == 1;
 gen midlineattrit = benchmark == 0 & bench__assignment != "";
 replace midlineattrit = . if bench__assignment == "";
 
-#delimit cr
+
 				
-save "$output_dta/attritfull",replace
+save "$output_dta/attritfull",replace;
 
