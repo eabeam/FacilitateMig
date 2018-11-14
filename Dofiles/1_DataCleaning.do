@@ -3,16 +3,16 @@
 Unilateral Facilitation Does Not Increase Migration 
 Emily A. Beam, David McKenzie, and Dean Yang 
 
-Last updated 05 June 2018 by Emily Beam (emily.beam@uvm.edu) 
+Last updated 13 November 2018 by Emily Beam (emily.beam@uvm.edu) 
 
-Inputs: merged_data_public
+Inputs: facilmig_public
 Outputs: merged_data_public2
 
 
 ****************************/
 
 
-use "$work/merged_data_public",clear
+use "$work/facilmig_public",clear
 
 
 /* Variable generation */ 

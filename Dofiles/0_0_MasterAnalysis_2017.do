@@ -5,7 +5,7 @@
 			
 			
 	Last updated: 
-	13 June 2018
+	13 November 2018
 	
 	Code created by Emily Beam and Karl Rubio.
 */
@@ -23,12 +23,13 @@ version 13
 ****************************************
 
 global path "~/Dropbox/FacilitatingMigration_replication_June2018"
+global path "~/Documents/GitHub/FacilitateMig/"
 
 * Dependent paths		
 global work "$path/Data"
 global dofiles "$path/Dofiles"
-global output_tables "$path/Output/Tables"
-global output_dta "$path/Output/IntermediateData"
+global output_tables "~/Desktop/FM-output"
+global output_dta "~/Desktop/FM-output"
 global table "$path/Dofiles/Tables"
 
 ****************************************
@@ -70,7 +71,7 @@ global cov0 "resp_age hsgrad somevoc colgradplus interested risks hhincome hhsav
 **************************************************;
 
 #delimit;
-do "$path/Dofiles/1_DataCleaning";		// use merged_data_public  ** Share
+do "$path/Dofiles/1_DataCleaning";		// use facilmig_public  ** Share
 										//save merged_data_public2
 										
 do "$path/Dofiles/2_DataCleaning";		//use merged_data_public2
